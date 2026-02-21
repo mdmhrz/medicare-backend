@@ -1,4 +1,5 @@
-import { auth } from "../../lib/auth";
+import { auth } from "../../../lib/auth";
+
 
 interface IRegisterPatientPayload {
     name: string;
@@ -6,7 +7,7 @@ interface IRegisterPatientPayload {
     password: string;
 }
 
-const registerPatient = async (payload: IRegisterPatientPayload) => {
+const registerPatientService = async (payload: IRegisterPatientPayload) => {
     const { name, email, password } = payload;
 
     const data = await auth.api.signUpEmail({
@@ -43,12 +44,9 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
     //     return patient;
     // }
 
-
     return data
 
 }
 
+export default registerPatientService;
 
-export const authService = {
-    registerPatient
-}
