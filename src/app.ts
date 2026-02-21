@@ -1,5 +1,4 @@
 import express, { Application, Request, Response } from "express";
-import { SpecialtyRoutes } from "./app/module/specialty.route";
 import { IndexRoutes } from "./app/routes";
 
 
