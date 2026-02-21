@@ -2,7 +2,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { Role, UserStatus } from "../../generated/prisma/enums";
-import { config } from "../../config";
+import { envVars } from "../../config/env";
+
 
 
 
@@ -12,7 +13,7 @@ export const auth = betterAuth({
         provider: "postgresql",
     }),
 
-    trustedOrigins: [config.appUrl],
+    trustedOrigins: [envVars.APP_URL],
 
     emailAndPassword: {
         enabled: true,
