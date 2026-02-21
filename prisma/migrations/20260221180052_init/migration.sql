@@ -1,9 +1,20 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'DOCTOR', 'PATIENT');
+
+-- CreateEnum
+CREATE TYPE "UserStatus" AS ENUM ('BLOCKED', 'DELETED', 'ACTIVE');
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "role" "Role" NOT NULL DEFAULT 'PATIENT',
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+    "needPasswordChange" BOOLEAN NOT NULL DEFAULT false,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "deletedAt" TIMESTAMP(3),
     "image" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -56,6 +67,37 @@ CREATE TABLE "verification" (
     CONSTRAINT "verification_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Patient" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "profilePhoto" TEXT,
+    "contactNumber" TEXT,
+    "address" TEXT,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "Patient_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "specialties" (
+    "id" TEXT NOT NULL,
+    "title" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "icon" VARCHAR(255),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "specialties_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
@@ -71,8 +113,26 @@ CREATE INDEX "account_userId_idx" ON "account"("userId");
 -- CreateIndex
 CREATE INDEX "verification_identifier_idx" ON "verification"("identifier");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Patient_email_key" ON "Patient"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Patient_userId_key" ON "Patient"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "specialties_title_key" ON "specialties"("title");
+
+-- CreateIndex
+CREATE INDEX "idx_specialty_is_deleted" ON "specialties"("isDeleted");
+
+-- CreateIndex
+CREATE INDEX "idx_specialty_title" ON "specialties"("title");
+
 -- AddForeignKey
 ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Patient" ADD CONSTRAINT "Patient_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

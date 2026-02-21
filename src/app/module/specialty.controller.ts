@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { SpecialtyService } from "./specialty.service";
 import { catchAsync } from "../shared/catchAsync";
 import { sendResponse } from "../shared/sendResponse";
+import status from "http-status";
 
 
 
@@ -10,7 +11,7 @@ const createSpecialty = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const specialty = await SpecialtyService.createSpecialty(payload);
     sendResponse(res, {
-        httpStatusCode: 201,
+        httpStatusCode: status.CREATED,
         success: true,
         message: "Specialty created successfully",
         data: specialty
@@ -22,7 +23,7 @@ const createSpecialty = catchAsync(async (req: Request, res: Response) => {
 const getAllSpecialties = catchAsync(async (req: Request, res: Response) => {
     const specialties = await SpecialtyService.getAllSpecialties();
     sendResponse(res, {
-        httpStatusCode: 200,
+        httpStatusCode: status.OK,
         success: true,
         message: "Specialties retrieved successfully",
         data: specialties
@@ -37,7 +38,7 @@ const updateSpecialtyById = catchAsync(async (req: Request, res: Response) => {
 
     const updatedSpecialty = await SpecialtyService.updateSpecialtyById(id as string, payload);
     sendResponse(res, {
-        httpStatusCode: 200,
+        httpStatusCode: status.OK,
         success: true,
         message: "Specialty updated successfully",
         data: updatedSpecialty

@@ -1,4 +1,5 @@
 import { auth } from "../../../lib/auth";
+import { prisma } from "../../../lib/prisma";
 
 
 interface IRegisterPatientPayload {
@@ -23,28 +24,31 @@ const registerPatientService = async (payload: IRegisterPatientPayload) => {
     }
 
 
-    // TODO: Create patient record and link to user record
-    // const patient = await prisma.$transaction(async (tx) => {
-    //     const patient = await tx.patient.create({
-    //         data: {
-    //             userId: data.user.id,
-    //         }
-    //     }
-    //     );
+    // Create patient record and link to user record
+    try {
+        const patient = await prisma.$transaction(async (tx) => {
+            const patientTx = await tx.patient.create({
+                data: {
+                    userId: data.user.id,
+                    name: payload.name,
+                    email: payload.email
+                }
+            })
 
-    //     await tx.user.update({
-    //         where: {
-    //             id: data.user.id,
-    //         },
-    //         data: {
-    //             patientId: patient.id,
-    //         }
-    //     })
+            return patientTx;
+        })
 
-    //     return patient;
-    // }
+        return { ...data, patient };
+    } catch (error) {
+        console.error("Transactional Error creating patient record:", error);
 
-    return data
+        // rollback user creation in Better Auth
+        await prisma.user.delete({
+            where: { id: data.user.id }
+        })
+
+        throw error
+    }
 
 }
 
