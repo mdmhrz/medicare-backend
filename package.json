@@ -8,7 +8,12 @@
     "build": "tsc",
     "dev": "tsx --watch src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev --name init",
+    "push": "prisma db push",
+    "studio": "prisma studio",
+    "pull": "prisma db pull"
   },
   "keywords": [],
   "author": "",
