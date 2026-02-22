@@ -1,4 +1,6 @@
+import status from "http-status";
 import { UserStatus } from "../../../../generated/prisma/enums";
+import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 
 interface ILoginPatientPayload {
@@ -15,8 +17,13 @@ const loginUserService = async (payload: ILoginPatientPayload) => {
         }
     })
 
+    if (data?.user.status === UserStatus.BLOCKED) {
+        throw new AppError(status.FORBIDDEN, "Your account has been blocked. Please contact support.");
+    }
+
+
     if (data?.user?.status === UserStatus.DELETED || data?.user?.isDeleted) {
-        throw new Error("Your account has been deleted. Please contact support.");
+        throw new AppError(status.GONE, "Your account has been deleted. Please contact support.");
     }
 
     return data;

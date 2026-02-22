@@ -1,3 +1,5 @@
+import status from "http-status";
+import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
 
@@ -20,7 +22,7 @@ const registerPatientService = async (payload: IRegisterPatientPayload) => {
     })
 
     if (!data.user) {
-        throw new Error("Failed to register patient");
+        throw new AppError(status.BAD_REQUEST, "Failed to register patient");
     }
 
 
