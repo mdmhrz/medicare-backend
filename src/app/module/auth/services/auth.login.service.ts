@@ -4,6 +4,7 @@ import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { tokenUtils } from "../../../utils/token";
 
+
 interface ILoginPatientPayload {
     email: string;
     password: string;
@@ -56,3 +57,6 @@ const loginUserService = async (payload: ILoginPatientPayload) => {
 }
 
 export default loginUserService;
+
+
+

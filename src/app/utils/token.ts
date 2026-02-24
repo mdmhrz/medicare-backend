@@ -22,7 +22,7 @@ const getRefreshToken = (payload: JwtPayload) => {
     const refreshToken = jwtUtils.createToken(
         payload,
         envVars.REFRESH_TOKEN_SECRET,
-        { expiresIn: envVars.REFRESH_TOKEN_EXPIRES_IN } as SignOptions
+        { expiresIn: 60 * 60 * 60 * 24 * 7 } as SignOptions
     );
 
     return refreshToken;

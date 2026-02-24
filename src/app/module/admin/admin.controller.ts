@@ -53,6 +53,10 @@ const deleteAdmin = catchAsync(
         const { id } = req.params;
         const user = req.user;
 
+        if (!user) {
+            throw new Error("User not found");
+        }
+
         const result = await AdminService.deleteAdmin(id as string, user);
 
         sendResponse(res, {

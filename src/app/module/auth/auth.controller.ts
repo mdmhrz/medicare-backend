@@ -6,6 +6,8 @@ import loginUserService from "./services/auth.login.service";
 import status from "http-status";
 import { tokenUtils } from "../../utils/token";
 import { getMeService } from "./services/auth.me.service";
+import AppError from "../../errorHelper/AppError";
+import { getNewToken } from "../../utils/getNewToken";
 
 const registerPatient = catchAsync(
     async (req: Request, res: Response) => {
@@ -79,8 +81,56 @@ const getMe = catchAsync(
 )
 
 
+
+const getNewTokenController = catchAsync(
+    async (req: Request, res: Response) => {
+
+
+
+        const refreshToken = req.cookies.refreshToken;
+        const betterAuthSessionToken = req.cookies["better-auth.session_token"];
+
+
+        console.log({
+            refreshToken,
+            betterAuthSessionToken
+        })
+
+        if (!refreshToken && !betterAuthSessionToken) {
+            throw new AppError(status.UNAUTHORIZED, "Unauthorized access! no refresh token provided");
+        }
+
+        const result = await getNewToken(refreshToken, betterAuthSessionToken);
+
+        const {
+            sessionToken,
+            accessToken,
+            refreshToken: newRefreshToken
+        } = result;
+
+        tokenUtils.setAccessTokenCookie(res, accessToken);
+        tokenUtils.setRefreshTokenCookie(res, newRefreshToken);
+        tokenUtils.setBetterAuthSessionCookie(res, sessionToken);
+
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "User logged in successfully",
+            data: {
+                accessToken,
+                refreshToken: newRefreshToken,
+                sessionToken
+            },
+        })
+
+    }
+)
+
+
 export const authController = {
     registerPatient,
     loginUser,
-    getMe
+    getMe,
+    getNewTokenController
 }
