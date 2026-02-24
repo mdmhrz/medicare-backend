@@ -66,6 +66,15 @@ export const checkAuth = (...authRoles: Role[]) => {
                     if (authRoles.length > 0 && !authRoles.includes(user.role)) {
                         throw new AppError(status.FORBIDDEN, "You are not authorized to access this resource");
                     }
+
+
+                    // set user data to request header
+
+                    req.user = {
+                        userId: user.id,
+                        email: user.email,
+                        role: user.role,
+                    }
                 }
             }
 
@@ -87,6 +96,8 @@ export const checkAuth = (...authRoles: Role[]) => {
             if (authRoles.length > 0 && !authRoles.includes(verifiedToken.data!.role)) {
                 throw new AppError(status.UNAUTHORIZED, "Forbidden access! you do not have permission to access this route");
             }
+
+
 
 
             next();

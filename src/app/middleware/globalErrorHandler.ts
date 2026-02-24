@@ -40,7 +40,7 @@ export const globalErrorHandler = (error: Error, req: Request, res: Response, ne
         success: false,
         message,
         errorSource,
-        // stack: envVars.NODE_ENV === "development" ? stack : undefined,
+        stack: envVars.NODE_ENV === "development" ? error.stack : undefined,
         error: envVars.NODE_ENV === "development" ? (error instanceof Error ? error.message : "Unknown error") : "Internal Server Error"
     }
 

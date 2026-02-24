@@ -5,6 +5,7 @@ import registerPatientService from "./services/auth.register.service";
 import loginUserService from "./services/auth.login.service";
 import status from "http-status";
 import { tokenUtils } from "../../utils/token";
+import { getMeService } from "./services/auth.me.service";
 
 const registerPatient = catchAsync(
     async (req: Request, res: Response) => {
@@ -58,8 +59,28 @@ const loginUser = catchAsync(
     }
 )
 
+const getMe = catchAsync(
+    async (req: Request, res: Response) => {
+        const user = req.user;
+
+        if (!user) {
+            throw new Error("Request User not found");
+        }
+
+        const result = await getMeService(user.userId)
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "User fetched successfully",
+            data: result
+        })
+    }
+)
+
 
 export const authController = {
     registerPatient,
-    loginUser
+    loginUser,
+    getMe
 }
