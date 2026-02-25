@@ -4,3 +4,6 @@ export * from "./auth.me.service";
 export * from "./auth.get-new-token.service";
 export * from "./auth.change-password.service";
 export * from "./auth.logout-user.service";
+export * from "./auth.verify-email.service";
+export * from "./auth.forget-password.service";
+export * from "./auth.reset-password.service";

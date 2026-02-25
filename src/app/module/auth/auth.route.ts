@@ -7,7 +7,10 @@ import {
     registerPatientController,
     changePasswordController,
     getNewTokenController,
-    logoutUserController
+    logoutUserController,
+    verifyEmailController,
+    forgetPasswordController,
+    resetPasswordController
 } from "./controllers";
 
 
@@ -40,5 +43,23 @@ router.post(
     checkAuth(Role.ADMIN, Role.DOCTOR, Role.SUPER_ADMIN, Role.PATIENT),
     logoutUserController
 )
+
+router.post(
+    '/verify-email',
+    verifyEmailController
+)
+
+router.post(
+    '/forget-password',
+    forgetPasswordController
+)
+
+router.post(
+    '/reset-password',
+    resetPasswordController
+)
+
+
+
 
 export const AuthRoutes = router;

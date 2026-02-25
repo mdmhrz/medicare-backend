@@ -4,3 +4,6 @@ export * from "./auth.get-me.controller";
 export * from "./auth.get-new-token.controller";
 export * from "./auth.change-password.controller";
 export * from "./auth.logout.controller";
+export * from "./auth.verify-email.controller";
+export * from "./auth.forget-password.controller";
+export * from "./auth.reset-password.controller";

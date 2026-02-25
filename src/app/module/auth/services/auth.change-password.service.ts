@@ -3,6 +3,7 @@ import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { IChangePasswordPayload } from "../interfaces/auth.interface";
 import { tokenUtils } from "../../../utils/token";
+import { prisma } from "../../../lib/prisma";
 
 export const changePasswordService = async (payload: IChangePasswordPayload, sessionToken: string) => {
     const session = await auth.api.getSession({
@@ -27,6 +28,19 @@ export const changePasswordService = async (payload: IChangePasswordPayload, ses
             Authorization: `Bearer ${sessionToken}`
         })
     })
+
+    if (session.user.needPasswordChange) {
+        await prisma.user.update({
+            where: {
+                id: session.user.id
+            },
+            data: {
+                needPasswordChange: false
+            }
+        })
+    }
+
+
 
 
     const accessToken = tokenUtils.getAccessToken({
