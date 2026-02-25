@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { Role, UserStatus } from "../../generated/prisma/enums";
 import { envVars } from "../config/env";
+import { bearer } from "better-auth/plugins";
 
 
 
@@ -48,6 +49,11 @@ export const auth = betterAuth({
             }
         }
     },
+
+
+    plugins: [
+        bearer()
+    ],
 
 
     session: {

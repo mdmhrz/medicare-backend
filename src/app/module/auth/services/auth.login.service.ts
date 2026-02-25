@@ -3,12 +3,10 @@ import { UserStatus } from "../../../../generated/prisma/enums";
 import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { tokenUtils } from "../../../utils/token";
+import { ILoginPatientPayload } from "../auth.interface";
 
 
-interface ILoginPatientPayload {
-    email: string;
-    password: string;
-}
+
 
 const loginUserService = async (payload: ILoginPatientPayload) => {
     const { email, password } = payload;

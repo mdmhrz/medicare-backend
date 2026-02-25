@@ -20,4 +20,10 @@ router.post(
     authController.getNewTokenController
 )
 
+router.post(
+    '/change-password',
+    checkAuth(Role.ADMIN, Role.DOCTOR, Role.SUPER_ADMIN, Role.PATIENT),
+    authController.changePassword
+)
+
 export const AuthRoutes = router;

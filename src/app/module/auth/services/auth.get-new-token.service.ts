@@ -1,13 +1,14 @@
 import status from "http-status";
-import { prisma } from "../lib/prisma";
-import { envVars } from "../config/env";
+import { prisma } from "../../../lib/prisma";
+import AppError from "../../../errorHelper/AppError";
+import { envVars } from "../../../config/env";
 import { JwtPayload } from "jsonwebtoken";
-import { tokenUtils } from "./token";
-import AppError from "../errorHelper/AppError";
-import { jwtUtils } from "./jwt";
+import { jwtUtils } from "../../../utils/jwt";
+import { tokenUtils } from "../../../utils/token";
 
 
-export const getNewToken = async (refreshToken: string, sessionToken: string) => {
+
+export const getNewTokenService = async (refreshToken: string, sessionToken: string) => {
 
     // console.log({ refreshToken }, "refresh token", { sessionToken }, "session token");
 

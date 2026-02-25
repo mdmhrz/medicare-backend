@@ -3,13 +3,10 @@ import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
 import { tokenUtils } from "../../../utils/token";
+import { IRegisterPatientPayload } from "../auth.interface";
 
 
-interface IRegisterPatientPayload {
-    name: string;
-    email: string;
-    password: string;
-}
+
 
 const registerPatientService = async (payload: IRegisterPatientPayload) => {
     const { name, email, password } = payload;
