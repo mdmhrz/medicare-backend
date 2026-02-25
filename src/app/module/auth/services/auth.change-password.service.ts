@@ -1,7 +1,7 @@
 import status from "http-status";
 import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
-import { IChangePasswordPayload } from "../auth.interface";
+import { IChangePasswordPayload } from "../interfaces/auth.interface";
 import { tokenUtils } from "../../../utils/token";
 
 export const changePasswordService = async (payload: IChangePasswordPayload, sessionToken: string) => {

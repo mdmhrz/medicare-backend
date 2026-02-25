@@ -3,7 +3,7 @@ import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { prisma } from "../../../lib/prisma";
 import { tokenUtils } from "../../../utils/token";
-import { IRegisterPatientPayload } from "../auth.interface";
+import { IRegisterPatientPayload } from "../interfaces/auth.interface";
 
 
 

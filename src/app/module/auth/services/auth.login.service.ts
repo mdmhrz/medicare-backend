@@ -3,12 +3,12 @@ import { UserStatus } from "../../../../generated/prisma/enums";
 import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
 import { tokenUtils } from "../../../utils/token";
-import { ILoginPatientPayload } from "../auth.interface";
+import { ILoginPatientPayload } from "../interfaces/auth.interface";
 
 
 
 
-const loginUserService = async (payload: ILoginPatientPayload) => {
+export const loginUserService = async (payload: ILoginPatientPayload) => {
     const { email, password } = payload;
     const data = await auth.api.signInEmail({
         body: {
@@ -54,7 +54,6 @@ const loginUserService = async (payload: ILoginPatientPayload) => {
     }
 }
 
-export default loginUserService;
 
 
 
