@@ -16,6 +16,18 @@ export const changePasswordService = async (payload: IChangePasswordPayload, ses
         throw new AppError(status.UNAUTHORIZED, "Unauthorized access! Invalid session token");
     }
 
+
+    const isGoogleAuthenticatedUser = await prisma.account.findFirst({
+        where: {
+            userId: session.user.id,
+            providerId: "google"
+        }
+    })
+
+    if (isGoogleAuthenticatedUser) {
+        throw new AppError(status.BAD_REQUEST, "Google authenticated users can not change password");
+    }
+
     const { currentPassword, newPassword } = payload;
 
     const result = await auth.api.changePassword({

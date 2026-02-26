@@ -7,3 +7,4 @@ export * from "./auth.logout.controller";
 export * from "./auth.verify-email.controller";
 export * from "./auth.forget-password.controller";
 export * from "./auth.reset-password.controller";
+export * from "./auth.google-login.controller";

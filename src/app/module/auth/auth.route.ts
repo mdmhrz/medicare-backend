@@ -10,7 +10,10 @@ import {
     logoutUserController,
     verifyEmailController,
     forgetPasswordController,
-    resetPasswordController
+    resetPasswordController,
+    googleLoginController,
+    googleLoginSuccessController,
+    handleOAuthErrorController
 } from "./controllers";
 
 
@@ -58,6 +61,11 @@ router.post(
     '/reset-password',
     resetPasswordController
 )
+
+// google auth
+router.get('/login/google', googleLoginController);
+router.get('/google/success', googleLoginSuccessController);
+router.get('/oauth/error', handleOAuthErrorController);
 
 
 

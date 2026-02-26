@@ -35,7 +35,7 @@ const setAccessTokenCookie = (res: Response, token: string) => {
     cookieUtils.setCookie(res, "accessToken", token, {
         httpOnly: true,
         secure: envVars.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: envVars.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         //1day
         // maxAge: Number(maxAge) this was experimental by using ms
@@ -49,7 +49,7 @@ const setRefreshTokenCookie = (res: Response, token: string) => {
     cookieUtils.setCookie(res, "refreshToken", token, {
         httpOnly: true,
         secure: envVars.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: envVars.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         //7 days
         maxAge: 60 * 60 * 60 * 24 * 7
@@ -62,7 +62,7 @@ const setBetterAuthSessionCookie = (res: Response, token: string) => {
     cookieUtils.setCookie(res, "better-auth.session_token", token, {
         httpOnly: true,
         secure: envVars.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: envVars.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         //1 day
         maxAge: 60 * 60 * 60 * 24

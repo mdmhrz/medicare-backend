@@ -15,6 +15,20 @@ export const forgetPasswordService = async (email: string) => {
         throw new AppError(status.NOT_FOUND, "User not found");
     }
 
+
+    const isGoogleAuthenticatedUser = await prisma.account.findFirst({
+        where: {
+            userId: isUserExist.id,
+            providerId: "google"
+        }
+    })
+
+    if (isGoogleAuthenticatedUser) {
+        throw new AppError(status.BAD_REQUEST, "Google authenticated users can not reset password");
+    }
+
+
+
     if (!isUserExist.emailVerified) {
         throw new AppError(status.BAD_REQUEST, "Email is not verified");
     }

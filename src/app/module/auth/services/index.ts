@@ -7,3 +7,4 @@ export * from "./auth.logout-user.service";
 export * from "./auth.verify-email.service";
 export * from "./auth.forget-password.service";
 export * from "./auth.reset-password.service";
+export * from "./auth.google-login.service";
