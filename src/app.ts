@@ -9,13 +9,10 @@ import path from "path";
 import { envVars } from "./app/config/env";
 import cors from "cors";
 
-
 export const app: Application = express();
-
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), "src/app/templates"));
-
 
 app.use("/api/auth", toNodeHandler(auth));
 
@@ -26,16 +23,10 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }))
 
-
-
-
-// Enable URL-encoded form data parsing
-app.use(express.urlencoded({ extended: true }));
-
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(express.urlencoded({ extended: true }));
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
@@ -45,10 +36,8 @@ app.get('/', (req: Request, res: Response) => {
 // Importing routes
 app.use('/api/v1', IndexRoutes)
 
-
 // Not found middleware
 app.use(notFound);
-
 
 // Global error handling middleware
 app.use(globalErrorHandler);
