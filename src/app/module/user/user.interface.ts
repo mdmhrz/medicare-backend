@@ -12,7 +12,7 @@ export interface ICreateDoctorPayload {
         registrationNumber?: string;
         experience?: number;
         gender?: Gender;
-        appoinmentFee?: number;
+        appointmentFee?: number;
         qualification?: string;
         currentWorkingPlace?: string;
         designation?: string;

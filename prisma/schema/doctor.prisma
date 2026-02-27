@@ -12,7 +12,7 @@ model Doctor {
   registrationNumber  String? @unique
   experience          Int?    @default(0)
   gender              String?
-  appoinmentFee       Float?  @default(0)
+  appointmentFee      Float?  @default(0)
   qualification       String?
   currentWorkingPlace String?
   designation         String?

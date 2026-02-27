@@ -13,7 +13,7 @@ export const doctorSearchableFields = [
 export const doctorFilterableFields = [
     'gender',
     'isDeleted',
-    'appoinmentFee',
+    'appointmentFee',
     'experience',
     'registrationNumber',
     'specialties.specialtyId',

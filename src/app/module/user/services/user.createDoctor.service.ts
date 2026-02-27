@@ -84,7 +84,7 @@ const createDoctorService = async (payload: ICreateDoctorPayload) => {
                     registrationNumber: true,
                     experience: true,
                     gender: true,
-                    appoinmentFee: true,
+                    appointmentFee: true,
                     qualification: true,
                     currentWorkingPlace: true,
                     designation: true,
