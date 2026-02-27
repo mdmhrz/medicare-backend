@@ -13,7 +13,7 @@ export interface IUpdateDoctorPayload {
         experience?: number
         registrationNumber?: string;
         gender?: Gender;
-        appointmentFee?: number;
+        appoinmentFee?: number;
         qualification?: string;
         currentWorkingPlace?: string;
         designation?: string;
