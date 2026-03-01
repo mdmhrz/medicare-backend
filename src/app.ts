@@ -9,6 +9,7 @@ import path from "path";
 import { envVars } from "./app/config/env";
 import cors from "cors";
 import qs from "qs";
+import { PaymentController } from "./app/module/payment/payment.controller";
 
 export const app: Application = express();
 
@@ -17,6 +18,10 @@ app.set("query parser", (str: string) => qs.parse(str));
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), "src/app/templates"));
+
+// webhook
+app.post("/webhook", express.raw({ type: "application/json" }), PaymentController.handleStripeWebhookEvent)
+
 
 app.use("/api/auth", toNodeHandler(auth));
 
