@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Application, Request, Response } from "express";
 import { IndexRoutes } from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
@@ -10,6 +11,8 @@ import { envVars } from "./app/config/env";
 import cors from "cors";
 import qs from "qs";
 import { PaymentController } from "./app/module/payment/payment.controller";
+import cron from "node-cron";
+import { AppointmentService } from "./app/module/appointment/appointment.service";
 
 export const app: Application = express();
 
@@ -40,6 +43,16 @@ app.use(express.urlencoded({ extended: true }));
 // Basic route
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, Welcome to Medicare Server!');
+});
+
+// Cron Job
+cron.schedule('*/25 * * * *', async () => {
+    try {
+        console.log('running a task every day at midnight');
+        await AppointmentService.cancelUnpaidAppointments();
+    } catch (error: any) {
+        console.error(`Error occoured while running cron job: ${error}, error stack: ${error?.message}`);
+    }
 });
 
 // Importing routes

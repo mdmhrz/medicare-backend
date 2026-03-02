@@ -7,7 +7,8 @@ import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
 import { AppointmentStatus } from './../../../generated/prisma/enums';
 import { IBookAppointmentPayload } from "./appointment.interface";
-import { uuidv7 } from "zod/mini";
+// import { uuidv7 } from "zod/mini";
+import { v7 as uuidv7 } from "uuid"
 
 // Pay Now Book Appointment
 const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
@@ -29,6 +30,8 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
             id: payload.scheduleId,
         }
     });
+
+    console.log(scheduleData, "schedule Data");
 
     const doctorSchedule = await prisma.doctorSchedules.findUniqueOrThrow({
         where: {
@@ -64,6 +67,7 @@ const bookAppointment = async (payload: IBookAppointmentPayload, user: IRequestU
         });
 
         //TODO : Payment Integration will be here
+
 
         const transactionId = String(uuidv7());
 

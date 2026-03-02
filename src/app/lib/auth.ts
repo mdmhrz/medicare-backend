@@ -91,6 +91,17 @@ export const auth = betterAuth({
                         }
                     })
 
+
+                    if (!user) {
+                        console.log(`User with email ${email} not found`)
+                        return
+                    }
+
+                    if (user && user.role === Role.SUPER_ADMIN) {
+                        console.log(`User with the email ${email} is a super admin, Skipping email verification`)
+                        return
+                    }
+
                     if (user && !user.emailVerified) {
                         sendEmail({
                             to: email,
