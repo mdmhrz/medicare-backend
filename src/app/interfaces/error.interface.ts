@@ -1,13 +1,14 @@
+
 export interface TErrorSources {
     path: string;
     message: string;
 }
 
 export interface TErrorResponse {
-    success: boolean;
     statusCode?: number;
+    success: boolean;
     message: string;
-    errorSource?: TErrorSources[];
+    errorSources: TErrorSources[];
     stack?: string;
-    error: string;
+    error?: unknown;
 }
