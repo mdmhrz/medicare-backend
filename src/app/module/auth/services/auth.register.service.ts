@@ -1,11 +1,12 @@
+import status from "http-status";
+import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
+import { prisma } from "../../../lib/prisma";
+import { tokenUtils } from "../../../utils/token";
+import { IRegisterPatientPayload } from "../interfaces/auth.interface";
 
 
-interface IRegisterPatientPayload {
-    name: string;
-    email: string;
-    password: string;
-}
+
 
 const registerPatientService = async (payload: IRegisterPatientPayload) => {
     const { name, email, password } = payload;
@@ -19,32 +20,63 @@ const registerPatientService = async (payload: IRegisterPatientPayload) => {
     })
 
     if (!data.user) {
-        throw new Error("Failed to register patient");
+        throw new AppError(status.BAD_REQUEST, "Failed to register patient");
     }
 
 
-    // TODO: Create patient record and link to user record
-    // const patient = await prisma.$transaction(async (tx) => {
-    //     const patient = await tx.patient.create({
-    //         data: {
-    //             userId: data.user.id,
-    //         }
-    //     }
-    //     );
+    // Create patient record and link to user record
+    try {
+        const patient = await prisma.$transaction(async (tx) => {
+            const patientTx = await tx.patient.create({
+                data: {
+                    userId: data.user.id,
+                    name: payload.name,
+                    email: payload.email
+                }
+            })
 
-    //     await tx.user.update({
-    //         where: {
-    //             id: data.user.id,
-    //         },
-    //         data: {
-    //             patientId: patient.id,
-    //         }
-    //     })
+            return patientTx;
+        })
 
-    //     return patient;
-    // }
 
-    return data
+        const accessToken = tokenUtils.getAccessToken({
+            userId: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            role: data.user.role,
+            status: data.user.status,
+            isDeleted: data.user.isDeleted,
+            emailVerified: data.user.emailVerified
+        })
+
+        const refreshToken = tokenUtils.getRefreshToken({
+            userId: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            role: data.user.role,
+            status: data.user.status,
+            isDeleted: data.user.isDeleted,
+            emailVerified: data.user.emailVerified
+        })
+
+
+        return {
+            ...data,
+            token: data.token,
+            patient,
+            accessToken,
+            refreshToken
+        };
+    } catch (error) {
+        console.error("Transactional Error creating patient record:", error);
+
+        // rollback user creation in Better Auth
+        await prisma.user.delete({
+            where: { id: data.user.id }
+        })
+
+        throw error
+    }
 
 }
 
