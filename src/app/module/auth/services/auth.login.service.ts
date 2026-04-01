@@ -1,12 +1,14 @@
+import status from "http-status";
 import { UserStatus } from "../../../../generated/prisma/enums";
+import AppError from "../../../errorHelper/AppError";
 import { auth } from "../../../lib/auth";
+import { tokenUtils } from "../../../utils/token";
+import { ILoginPatientPayload } from "../interfaces/auth.interface";
 
-interface ILoginPatientPayload {
-    email: string;
-    password: string;
-}
 
-const loginUserService = async (payload: ILoginPatientPayload) => {
+
+
+export const loginUserService = async (payload: ILoginPatientPayload) => {
     const { email, password } = payload;
     const data = await auth.api.signInEmail({
         body: {
@@ -15,11 +17,43 @@ const loginUserService = async (payload: ILoginPatientPayload) => {
         }
     })
 
-    if (data?.user?.status === UserStatus.DELETED || data?.user?.isDeleted) {
-        throw new Error("Your account has been deleted. Please contact support.");
+    if (data?.user.status === UserStatus.BLOCKED) {
+        throw new AppError(status.FORBIDDEN, "Your account has been blocked. Please contact support.");
     }
 
-    return data;
+
+    if (data?.user?.status === UserStatus.DELETED || data?.user?.isDeleted) {
+        throw new AppError(status.GONE, "Your account has been deleted. Please contact support.");
+    }
+
+
+    const accessToken = tokenUtils.getAccessToken({
+        userId: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified
+    })
+
+    const refreshToken = tokenUtils.getRefreshToken({
+        userId: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted,
+        emailVerified: data.user.emailVerified
+    })
+
+    return {
+        ...data,
+        accessToken,
+        refreshToken
+    }
 }
 
-export default loginUserService;
+
+
+
