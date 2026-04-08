@@ -34,7 +34,8 @@ export const loginUserService = async (payload: ILoginPatientPayload) => {
         role: data.user.role,
         status: data.user.status,
         isDeleted: data.user.isDeleted,
-        emailVerified: data.user.emailVerified
+        emailVerified: data.user.emailVerified,
+        needPasswordChange: data.user.needPasswordChange
     })
 
     const refreshToken = tokenUtils.getRefreshToken({
@@ -44,7 +45,8 @@ export const loginUserService = async (payload: ILoginPatientPayload) => {
         role: data.user.role,
         status: data.user.status,
         isDeleted: data.user.isDeleted,
-        emailVerified: data.user.emailVerified
+        emailVerified: data.user.emailVerified,
+        needPasswordChange: data.user.needPasswordChange
     })
 
     return {
