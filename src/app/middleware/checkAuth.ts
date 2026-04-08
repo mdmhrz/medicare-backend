@@ -11,12 +11,16 @@ export const checkAuth = (...authRoles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             //get session token from request
-            const sessionToken = cookieUtils.getCookie(req, "better-auth.session_token");
+            const rawSessionToken = cookieUtils.getCookie(req, "better-auth.session_token");
 
             // Part-1: check if session token is provided and verify
-            if (!sessionToken) {
+            if (!rawSessionToken) {
                 throw new AppError(status.UNAUTHORIZED, "Unauthorized access! no session token provided");
             }
+
+            // Better-Auth stores only the token ID in the DB; the cookie value is `tokenId.signature`
+            // So we must strip the signature suffix before querying
+            const sessionToken = rawSessionToken.split(".")[0];
 
             // if session token is provided then check if session token is valid
             if (sessionToken) {
