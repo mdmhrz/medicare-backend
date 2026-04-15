@@ -40,9 +40,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
-// Basic route
+// Serve public static files
+app.use(express.static(path.resolve(process.cwd(), 'public')));
+
+// Basic route - Serve landing page
 app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, Welcome to Medicare Server!');
+    res.sendFile(path.resolve(process.cwd(), 'public/index.html'));
 });
 
 // Cron Job

@@ -10,6 +10,7 @@ import { Doctor, Prisma } from "../../../generated/prisma/client";
 
 
 const getAllDoctors = async (query: IQueryParams) => {
+    // console.log(query, "query check")
     // const doctors = await prisma.doctor.findMany({
     //     where: {
     //         isDeleted: false,

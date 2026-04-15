@@ -2,12 +2,409 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medicare API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card-bg: #111111;
+            --text: #f0f0f0;
+            --subtext: #888888;
+            /* Lighter + softer gray */
+            --teal: #14b8a6;
+            /* Changed from blue to teal */
+            --teal-hover: #2dd4bf;
+            /* Lighter teal for hover */
+            --border: #222222;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .topbar {
+            border-bottom: 1px solid var(--border);
+            padding: 18px 0;
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+        }
+
+        .topbar .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wordmark {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.78rem;
+            color: var(--subtext);
+            font-weight: 400;
+            /* thinner */
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--teal);
+        }
+
+        .hero {
+            padding: 110px 0 90px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .eyebrow {
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--subtext);
+            margin-bottom: 12px;
+            font-weight: 400;
+            /* thinner */
+        }
+
+        h1 {
+            font-size: 2.9rem;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        h1 em {
+            font-style: normal;
+            color: var(--teal);
+        }
+
+        .lead {
+            font-size: 1.05rem;
+            line-height: 1.65;
+            color: var(--subtext);
+            max-width: 620px;
+            margin: 0 auto 40px;
+            font-weight: 400;
+            /* lighter */
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--teal);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--teal-hover);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: #1a1a1a;
+            border-color: var(--teal);
+        }
+
+        .section {
+            padding: 80px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .features {
+            list-style: none;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .features li {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 32px;
+            padding: 22px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .features li:first-child {
+            border-top: 1px solid var(--border);
+        }
+
+        .feat-label {
+            font-size: 0.78rem;
+            color: var(--subtext);
+            font-weight: 500;
+            /* slightly thinner than before */
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding-top: 3px;
+        }
+
+        .feat-desc {
+            font-size: 0.96rem;
+            color: var(--subtext);
+            line-height: 1.7;
+            font-weight: 400;
+            /* lighter subtext */
+        }
+
+        .feat-desc strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .pill {
+            font-size: 0.85rem;
+            padding: 8px 18px;
+            border-radius: 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--subtext);
+            transition: all 0.2s ease;
+            font-weight: 400;
+        }
+
+        .pill:hover {
+            border-color: var(--teal);
+            color: var(--text);
+        }
+
+        footer {
+            padding: 50px 0 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        footer .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .footer-note {
+            font-size: 0.82rem;
+            color: var(--subtext);
+            font-weight: 400;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .footer-links a {
+            font-size: 0.82rem;
+            color: var(--subtext);
+            text-decoration: none;
+            font-weight: 400;
+        }
+
+        .footer-links a:hover {
+            color: var(--teal);
+        }
+
+        @media (max-width: 640px) {
+            .features li {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            h1 {
+                font-size: 2.3rem;
+            }
+
+            .hero {
+                padding: 90px 0 70px;
+            }
+        }
+    </style>
 </head>
 
 <body>
+
+    <nav class="topbar">
+        <div class="wrap">
+            <a class="wordmark" href="/">Medicare API</a>
+            <div class="status">
+                <span class="dot"></span>
+                operational
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="wrap">
+            <p class="eyebrow">Backend API · v1.0</p>
+            <h1>Healthcare <em>API</em></h1>
+            <p class="lead">
+                A robust and secure backend platform for modern healthcare systems.<br>
+                Built for scalability, performance, and compliance.
+            </p>
+            <div class="cta-row">
+                <a href="#features" class="btn btn-primary">Explore Features</a>
+                <a href="#stack" class="btn btn-ghost">Tech Stack</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="wrap">
+            <h2>Core Features</h2>
+            <ul class="features">
+                <li>
+                    <span class="feat-label">Authentication</span>
+                    <span class="feat-desc">
+                        <strong>Email, password & Google OAuth</strong> with JWT sessions and role-based access control
+                        (Patient, Doctor, Admin).
+                    </span>
+                </li>
+                <li>
+                    <span class="feat-label">Doctor Management</span>
+                    <span class="feat-desc">
+                        <strong>Complete doctor profiles</strong> including specialties, qualifications, availability,
+                        ratings, and verification.
+                    </span>
+                </li>
+                <li>
+                    <span class="feat-label">Appointment System</span>
+                    <span class="feat-desc">
+                        <strong>Real-time booking & scheduling</strong> with flexible availability, status tracking, and
+                        automatic handling.
+                    </span>
+                </li>
+                <li>
+                    <span class="feat-label">Prescriptions</span>
+                    <span class="feat-desc">
+                        <strong>Digital prescription management</strong> with PDF generation and version history.
+                    </span>
+                </li>
+                <li>
+                    <span class="feat-label">Reviews & Ratings</span>
+                    <span class="feat-desc">
+                        <strong>Patient feedback system</strong> with 5-star ratings and automatic profile aggregation.
+                    </span>
+                </li>
+                <li>
+                    <span class="feat-label">Payments</span>
+                    <span class="feat-desc">
+                        <strong>Secure payment integration</strong> with Stripe for appointments and services.
+                    </span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="section" id="stack">
+        <div class="wrap">
+            <h2>Built With</h2>
+            <div class="stack">
+                <span class="pill">Node.js</span>
+                <span class="pill">TypeScript</span>
+                <span class="pill">Express</span>
+                <span class="pill">Prisma ORM</span>
+                <span class="pill">PostgreSQL</span>
+                <span class="pill">JWT Authentication</span>
+                <span class="pill">Stripe Payments</span>
+                <span class="pill">Cloudinary</span>
+                <span class="pill">PDFKit</span>
+                <span class="pill">Nodemailer</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <span class="footer-note">© 2026 Medicare API • Secure Healthcare Backend</span>
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#stack">Stack</a>
+            </div>
+        </div>
+    </footer>
 
 </body>
 
