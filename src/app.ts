@@ -3,6 +3,7 @@ import express, { Application, Request, Response } from "express";
 import { IndexRoutes } from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
+import { requestLogger } from "./app/middleware/requestLogger";
 import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./app/lib/auth";
@@ -16,15 +17,13 @@ import { AppointmentService } from "./app/module/appointment/appointment.service
 
 export const app: Application = express();
 
-// app.set("query parser", (str: string) => qs.parse(str));
 app.set("query parser", (str: string) => qs.parse(str));
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), "src/app/templates"));
 
 // webhook
-app.post("/webhook", express.raw({ type: "application/json" }), PaymentController.handleStripeWebhookEvent)
-
+app.post("/webhook", express.raw({ type: "application/json" }), PaymentController.handleStripeWebhookEvent);
 
 app.use("/api/auth", toNodeHandler(auth));
 
@@ -33,12 +32,15 @@ app.use(cors({
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
-}))
+}));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+// Request Logger - early in chain to capture all requests
+app.use(requestLogger);
 
 // Serve public static files
 app.use(express.static(path.resolve(process.cwd(), 'public')));
@@ -59,13 +61,14 @@ cron.schedule('*/25 * * * *', async () => {
 });
 
 // Importing routes
-app.use('/api/v1', IndexRoutes)
+app.use('/api/v1', IndexRoutes);
 
 // Not found middleware
 app.use(notFound);
 
 // Global error handling middleware
 app.use(globalErrorHandler);
+
 
 
 
