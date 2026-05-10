@@ -8,3 +8,4 @@ coverage
 /generated/prisma
 .vscode
 logs/
+logs/*
