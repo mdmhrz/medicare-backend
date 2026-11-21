@@ -3,6 +3,7 @@ import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { AppointmentService } from "./appointment.service";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 const bookAppointment = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -29,10 +30,10 @@ const getMyAppointments = catchAsync(async (req: Request, res: Response) => {
 
 const changeAppointmentStatus = catchAsync(async (req: Request, res: Response) => {
     const appointmentId = req.params.id;
-    const payload = req.body;
+    const { status: appointmentStatus } = req.body;
     const user = req.user;
 
-    const updatedAppointment = await AppointmentService.changeAppointmentStatus(appointmentId as string, payload, user);
+    const updatedAppointment = await AppointmentService.changeAppointmentStatus(appointmentId as string, appointmentStatus, user);
     sendResponse(res, {
         success: true,
         httpStatusCode: status.OK,
@@ -55,12 +56,23 @@ const getMySingleAppointment = catchAsync(async (req: Request, res: Response) =>
 });
 
 const getAllAppointments = catchAsync(async (req: Request, res: Response) => {
-    const appointments = await AppointmentService.getAllAppointments();
+    const result = await AppointmentService.getAllAppointments(req.query as IQueryParams);
     sendResponse(res, {
         success: true,
         httpStatusCode: status.OK,
-        message: 'All appointments retrieved successfully',
-        data: appointments
+        message: 'Appointments retrieved successfully',
+        data: result.data,
+        meta: result.meta
+    });
+});
+
+const getAppointmentById = catchAsync(async (req: Request, res: Response) => {
+    const appointment = await AppointmentService.getAppointmentById(req.params.id as string);
+    sendResponse(res, {
+        success: true,
+        httpStatusCode: status.OK,
+        message: 'Appointment retrieved successfully',
+        data: appointment
     });
 });
 
@@ -95,6 +107,7 @@ export const AppointmentController = {
     changeAppointmentStatus,
     getMySingleAppointment,
     getAllAppointments,
+    getAppointmentById,
     bookAppointmentWithPayLater,
     initiatePayment,
 }

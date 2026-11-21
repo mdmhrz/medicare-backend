@@ -1,13 +1,13 @@
 import { Prisma } from "../../../generated/prisma/client"
 
 export const doctorScheduleSearchableFields = [
-    'id',
     'doctorId',
     'scheduleId',
+    'doctor.name',
+    'doctor.email',
 ]
 
 export const doctorScheduleFilterableFields = [
-    'id',
     'doctorId',
     'scheduleId',
     'createdAt',

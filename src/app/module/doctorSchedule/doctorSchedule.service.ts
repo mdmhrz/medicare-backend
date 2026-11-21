@@ -1,4 +1,6 @@
+import status from "http-status";
 import { DoctorSchedules, Prisma } from "../../../generated/prisma/client";
+import AppError from "../../errorHelper/AppError";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
@@ -81,8 +83,16 @@ const getAllDoctorSchedules = async (query: IQueryParams) => {
     const result = await queryBuilder
         .search()
         .filter()
-        .paginate()
+        .include({
+            doctor: {
+                include: {
+                    user: true,
+                },
+            },
+            schedule: true,
+        })
         .dynamicInclude(doctorScheduleIncludeConfig)
+        .paginate()
         .sort()
         .execute();
 
@@ -93,16 +103,57 @@ const getDoctorScheduleById = async (doctorId: string, scheduleId: string) => {
     const doctorSchedule = await prisma.doctorSchedules.findUnique({
         where: {
             doctorId_scheduleId: {
-                doctorId: doctorId,
-                scheduleId: scheduleId
-            }
+                doctorId,
+                scheduleId,
+            },
         },
         include: {
             schedule: true,
-            doctor: true
-        }
+            doctor: {
+                include: {
+                    user: true,
+                },
+            },
+        },
     });
+
+    if (!doctorSchedule) {
+        throw new AppError(status.NOT_FOUND, "Doctor schedule not found");
+    }
+
     return doctorSchedule;
+}
+
+// Admin-only: remove a doctor from a slot. A booked slot must be handled
+// through the appointment flow instead of being silently unassigned.
+const deleteDoctorSchedule = async (doctorId: string, scheduleId: string) => {
+    const doctorSchedule = await prisma.doctorSchedules.findUnique({
+        where: {
+            doctorId_scheduleId: {
+                doctorId,
+                scheduleId,
+            },
+        },
+    });
+
+    if (!doctorSchedule) {
+        throw new AppError(status.NOT_FOUND, "Doctor schedule not found");
+    }
+
+    if (doctorSchedule.isBooked) {
+        throw new AppError(status.BAD_REQUEST, "Cannot unassign a booked schedule");
+    }
+
+    await prisma.doctorSchedules.delete({
+        where: {
+            doctorId_scheduleId: {
+                doctorId,
+                scheduleId,
+            },
+        },
+    });
+
+    return { message: "Doctor schedule unassigned successfully" };
 }
 
 
@@ -168,5 +219,6 @@ export const DoctorScheduleService = {
     getDoctorScheduleById,
     updateMyDoctorSchedule,
     deleteMyDoctorSchedule,
-    getMyDoctorSchedules
+    getMyDoctorSchedules,
+    deleteDoctorSchedule,
 }

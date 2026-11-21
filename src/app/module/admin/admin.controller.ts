@@ -2,17 +2,19 @@ import { Request, Response } from "express";
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
+import { IQueryParams } from "../../interfaces/query.interface";
 import { AdminService } from "./admin.service";
 
 const getAllAdmins = catchAsync(
     async (req: Request, res: Response) => {
-        const result = await AdminService.getAllAdmins();
+        const result = await AdminService.getAllAdmins(req.query as IQueryParams);
 
         sendResponse(res, {
             httpStatusCode: status.OK,
             success: true,
             message: "Admins fetched successfully",
-            data: result,
+            data: result.data,
+            meta: result.meta,
         })
     }
 )
@@ -62,7 +64,6 @@ const deleteAdmin = catchAsync(
             data: result,
         })
     }
-
 )
 
 const changeUserStatus = catchAsync(

@@ -10,22 +10,27 @@ const router = Router();
 router.get("/",
     checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
     AdminController.getAllAdmins);
-router.get("/:id",
-    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
-    AdminController.getAdminById);
-router.patch("/:id",
-    checkAuth(Role.SUPER_ADMIN),
-    validateRequest(updateAdminZodSchema), AdminController.updateAdmin);
-router.delete("/:id",
-    checkAuth(Role.SUPER_ADMIN),
-    AdminController.deleteAdmin);
 
+// Static admin-user routes must be declared before /:id,
+// otherwise "change-user-status" is treated as an admin id.
 router.patch("/change-user-status",
     checkAuth(Role.SUPER_ADMIN, Role.ADMIN),
     AdminController.changeUserStatus);
+
 router.patch("/change-user-role",
     checkAuth(Role.SUPER_ADMIN),
     AdminController.changeUserRole);
 
+router.get("/:id",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+    AdminController.getAdminById);
+
+router.patch("/:id",
+    checkAuth(Role.SUPER_ADMIN),
+    validateRequest(updateAdminZodSchema), AdminController.updateAdmin);
+
+router.delete("/:id",
+    checkAuth(Role.SUPER_ADMIN),
+    AdminController.deleteAdmin);
 
 export const AdminRoutes = router;

@@ -1,19 +1,19 @@
-import { Prisma } from "../../../generated/prisma/client"
-
-export const scheduleFilterableFields = [
-    'id',
-    'startDateTime',
-    'endDateTime',
-    // 'appointments.doctors.id',
-]
+import { Prisma } from "../../../generated/prisma/client";
 
 export const scheduleSearchableFields = [
-    'id',
-    'startDateTime',
-    'endDateTime',
-]
+    "id",
+    // Search by the doctor assigned to a slot
+    "doctorSchedules.doctor.name",
+    "doctorSchedules.doctor.email",
+];
 
-export const scheduleIncludeConfig : Partial<Record<keyof Prisma.ScheduleInclude, Prisma.ScheduleInclude[keyof Prisma.ScheduleInclude]>> ={
+export const scheduleFilterableFields = [
+    "id",
+    "startDateTime",
+    "endDateTime",
+];
+
+export const scheduleIncludeConfig: Prisma.ScheduleInclude = {
     appointments: {
         include: {
             doctor: true,
@@ -21,7 +21,11 @@ export const scheduleIncludeConfig : Partial<Record<keyof Prisma.ScheduleInclude
             payment: true,
             prescription: true,
             review: true,
-        }
+        },
     },
-    doctorSchedules: true
-}
+    doctorSchedules: {
+        include: {
+            doctor: true,
+        },
+    },
+};

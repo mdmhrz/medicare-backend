@@ -1,94 +1,92 @@
 import { addHours, addMinutes, format } from "date-fns";
+import status from "http-status";
 import { Prisma, Schedule } from "../../../generated/prisma/client";
+import AppError from "../../errorHelper/AppError";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { prisma } from "../../lib/prisma";
 import { QueryBuilder } from "../../utils/queryBuilder";
 import { scheduleFilterableFields, scheduleIncludeConfig, scheduleSearchableFields } from "./schedule.constants";
 import { ICreateSchedulePayload, IUpdateSchedulePayload } from "./schedule.interface";
 import { convertDateTime } from "./schedule.utils";
-import AppError from "../../errorHelper/AppError";
-import status from "http-status";
+
+const SLOT_INTERVAL_MINUTES = 30;
+
+const toMinutes = (time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return (hours * 60) + minutes;
+};
+
+const buildDateTime = (date: string, time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+
+    return addMinutes(
+        addHours(`${format(new Date(date), "yyyy-MM-dd")}`, hours),
+        minutes
+    );
+};
 
 const createSchedule = async (payload: ICreateSchedulePayload) => {
     const { startDate, endDate, startTime, endTime } = payload;
 
-    const interval = 30;
-
     const currentDate = new Date(startDate);
     const lastDate = new Date(endDate);
+
+    if (Number.isNaN(currentDate.getTime()) || Number.isNaN(lastDate.getTime())) {
+        throw new AppError(status.BAD_REQUEST, "Invalid date range");
+    }
 
     if (currentDate > lastDate) {
         throw new AppError(status.BAD_REQUEST, "End date cannot be earlier than start date");
     }
 
-    const schedules = [];
+    if (toMinutes(startTime) >= toMinutes(endTime)) {
+        throw new AppError(status.BAD_REQUEST, "End time must be after start time");
+    }
 
-
+    const slots: Array<{ startDateTime: Date; endDateTime: Date }> = [];
 
     while (currentDate <= lastDate) {
+        const dateLabel = format(currentDate, "yyyy-MM-dd");
+        const dayStart = buildDateTime(dateLabel, startTime);
+        const dayEnd = buildDateTime(dateLabel, endTime);
 
+        let cursor = new Date(dayStart);
 
+        while (cursor < dayEnd) {
+            slots.push({
+                startDateTime: await convertDateTime(cursor),
+                endDateTime: await convertDateTime(addMinutes(cursor, SLOT_INTERVAL_MINUTES)),
+            });
 
-        const startDateTime = new Date(
-            addMinutes(
-                addHours(
-                    `${format(currentDate, "yyyy-MM-dd")}`,
-                    Number(startTime.split(":")[0])
-                ),
-                Number(startTime.split(":")[1])
-            )
-        );
-
-        const endDateTime = new Date(
-            addMinutes(
-                addHours(
-                    `${format(currentDate, "yyyy-MM-dd")}`,
-                    Number(endTime.split(":")[0])
-                ),
-                Number(endTime.split(":")[1])
-            )
-        );
-
-        while (startDateTime < endDateTime) {
-            const s = await convertDateTime(startDateTime);
-            const e = await convertDateTime(addMinutes(startDateTime, interval));
-
-            const scheduleData = {
-                startDateTime: s,
-                endDateTime: e
-            }
-
-            console.log(scheduleData, 'check data');
-
-            const existingSchedule = await prisma.schedule.findFirst({
-                where: {
-                    startDateTime: scheduleData.startDateTime,
-                    endDateTime: scheduleData.endDateTime
-                }
-            })
-
-            if (existingSchedule) {
-                throw new AppError(status.BAD_REQUEST, "Schedule already exists");
-            }
-
-            if (!existingSchedule) {
-                const result = await prisma.schedule.create({
-                    data: scheduleData
-                })
-                console.log(result);
-                schedules.push(result);
-            }
-
-            startDateTime.setMinutes(startDateTime.getMinutes() + interval)
+            cursor = addMinutes(cursor, SLOT_INTERVAL_MINUTES);
         }
 
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    console.log(schedules, 'at last');
+    if (slots.length === 0) {
+        throw new AppError(status.BAD_REQUEST, "No schedule slots would be created");
+    }
 
-    return schedules;
-}
+    // Reject the whole request if any generated slot overlaps an existing slot.
+    const conflictingSchedule = await prisma.schedule.findFirst({
+        where: {
+            OR: slots.map((slot) => ({
+                startDateTime: { lt: slot.endDateTime },
+                endDateTime: { gt: slot.startDateTime },
+            })),
+        },
+        select: { id: true },
+    });
+
+    if (conflictingSchedule) {
+        throw new AppError(status.BAD_REQUEST, "One or more of these schedule slots already exist");
+    }
+
+    return prisma.$transaction(
+        slots.map((slot) => prisma.schedule.create({ data: slot }))
+    );
+};
 
 const getAllSchedules = async (query: IQueryParams) => {
     const queryBuilder = new QueryBuilder<Schedule, Prisma.ScheduleWhereInput, Prisma.ScheduleInclude>(
@@ -96,56 +94,103 @@ const getAllSchedules = async (query: IQueryParams) => {
         query,
         {
             searchableFields: scheduleSearchableFields,
-            filterableFields: scheduleFilterableFields
+            filterableFields: scheduleFilterableFields,
         }
-    )
+    );
 
-    const result = await queryBuilder
-        .search()
-        .filter()
-        .paginate()
+    let builder = queryBuilder.search().filter();
+
+    // Availability is a relation filter, so it is applied explicitly.
+    if (query.booked === "true") {
+        builder = builder.where({ doctorSchedules: { some: { isBooked: true } } });
+    } else if (query.booked === "false") {
+        builder = builder.where({ doctorSchedules: { none: { isBooked: true } } });
+    }
+
+    return builder
+        .include({
+            doctorSchedules: {
+                include: {
+                    doctor: true,
+                },
+            },
+            _count: {
+                select: {
+                    appointments: true,
+                    doctorSchedules: true,
+                },
+            },
+        })
         .dynamicInclude(scheduleIncludeConfig)
+        .paginate()
         .sort()
         .fields()
         .execute();
-
-    return result;
-}
+};
 
 const getScheduleById = async (id: string) => {
     const schedule = await prisma.schedule.findUnique({
         where: {
-            id: id
-        }
+            id,
+        },
+        include: {
+            doctorSchedules: {
+                include: {
+                    doctor: true,
+                },
+            },
+            appointments: {
+                include: {
+                    patient: true,
+                    doctor: true,
+                    payment: true,
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+            },
+            _count: {
+                select: {
+                    appointments: true,
+                    doctorSchedules: true,
+                },
+            },
+        },
     });
+
+    if (!schedule) {
+        throw new AppError(status.NOT_FOUND, "Schedule not found");
+    }
+
     return schedule;
-}
+};
 
-// refactoring - doctor's appointment or booked slot conflict check
 const updateSchedule = async (id: string, payload: IUpdateSchedulePayload) => {
-    const { startDate, endDate, startTime, endTime } = payload;
+    const existingSchedule = await prisma.schedule.findUnique({
+        where: { id },
+    });
 
-    const startDateTime = new Date(
-        addMinutes(
-            addHours(
-                `${format(new Date(startDate), "yyyy-MM-dd")}`,
-                Number(startTime.split(":")[0])
-            ),
-            Number(startTime.split(":")[1])
-        )
-    );
+    if (!existingSchedule) {
+        throw new AppError(status.NOT_FOUND, "Schedule not found");
+    }
 
-    const endDateTime = new Date(
-        addMinutes(
-            addHours(
-                `${format(new Date(endDate), "yyyy-MM-dd")}`,
-                Number(endTime.split(":")[0])
-            ),
-            Number(endTime.split(":")[1])
-        )
-    );
+    // Allow partial updates by falling back to the current slot values.
+    const startDate = payload.startDate ?? format(existingSchedule.startDateTime, "yyyy-MM-dd");
+    const endDate = payload.endDate ?? format(existingSchedule.endDateTime, "yyyy-MM-dd");
+    const startTime = payload.startTime ?? format(existingSchedule.startDateTime, "HH:mm");
+    const endTime = payload.endTime ?? format(existingSchedule.endDateTime, "HH:mm");
 
-    // Check for overlapping schedule
+    if (toMinutes(startTime) >= toMinutes(endTime)) {
+        throw new AppError(status.BAD_REQUEST, "End time must be after start time");
+    }
+
+    const startDateTime = await convertDateTime(buildDateTime(startDate, startTime));
+    const endDateTime = await convertDateTime(buildDateTime(endDate, endTime));
+
+    if (startDateTime >= endDateTime) {
+        throw new AppError(status.BAD_REQUEST, "End time must be after start time");
+    }
+
     const conflictingSchedule = await prisma.schedule.findFirst({
         where: {
             id: { not: id },
@@ -160,31 +205,52 @@ const updateSchedule = async (id: string, payload: IUpdateSchedulePayload) => {
         throw new AppError(status.BAD_REQUEST, "This time slot overlaps with an existing schedule");
     }
 
-    const updatedSchedule = await prisma.schedule.update({
+    return prisma.schedule.update({
         where: { id },
         data: {
             startDateTime,
             endDateTime,
         },
     });
-
-    return updatedSchedule;
 };
 
-
 const deleteSchedule = async (id: string) => {
-    await prisma.schedule.delete({
-        where: {
-            id: id
-        }
+    const schedule = await prisma.schedule.findUnique({
+        where: { id },
+        include: {
+            doctorSchedules: {
+                select: { isBooked: true },
+            },
+            _count: {
+                select: { appointments: true },
+            },
+        },
     });
+
+    if (!schedule) {
+        throw new AppError(status.NOT_FOUND, "Schedule not found");
+    }
+
+    const hasBookedSlot = schedule.doctorSchedules.some((doctorSchedule) => doctorSchedule.isBooked);
+
+    if (hasBookedSlot || (schedule._count?.appointments ?? 0) > 0) {
+        throw new AppError(
+            status.BAD_REQUEST,
+            "Cannot delete a schedule that is booked or has appointments"
+        );
+    }
+
+    await prisma.schedule.delete({
+        where: { id },
+    });
+
     return true;
-}
+};
 
 export const ScheduleService = {
     createSchedule,
     getAllSchedules,
     getScheduleById,
     updateSchedule,
-    deleteSchedule
-}
+    deleteSchedule,
+};

@@ -33,8 +33,15 @@ router.get(
 // get doctor schedule by id (only for admins)
 router.get(
     "/:doctorId/schedule/:scheduleId",
-    // checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
     DoctorScheduleController.getDoctorScheduleById
+);
+
+// Admin-only: unassign a doctor from a schedule
+router.delete(
+    "/:doctorId/schedule/:scheduleId",
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+    DoctorScheduleController.deleteDoctorSchedule
 );
 
 router.patch(

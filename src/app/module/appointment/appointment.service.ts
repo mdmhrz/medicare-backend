@@ -1,13 +1,15 @@
 import status from "http-status";
-import { PaymentStatus, Role } from "../../../generated/prisma/enums";
+import { AppointmentStatus, PaymentStatus, Role } from "../../../generated/prisma/enums";
+import { Appointment, Prisma } from "../../../generated/prisma/client";
 import { envVars } from "../../config/env";
 import { stripe } from "../../config/stripe.config";
 import AppError from "../../errorHelper/AppError";
+import { IQueryParams } from "../../interfaces/query.interface";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
-import { AppointmentStatus } from './../../../generated/prisma/enums';
+import { QueryBuilder } from "../../utils/queryBuilder";
+import { appointmentFilterableFields, appointmentIncludeConfig, appointmentSearchableFields } from "./appointment.constants";
 import { IBookAppointmentPayload } from "./appointment.interface";
-// import { uuidv7 } from "zod/mini";
 import { v7 as uuidv7 } from "uuid"
 
 // Pay Now Book Appointment
@@ -170,35 +172,51 @@ const getMyAppointments = async (user: IRequestUser) => {
 // 4. Admin and Super admin can update to any status.
 
 const changeAppointmentStatus = async (appointmentId: string, appointmentStatus: AppointmentStatus, user: IRequestUser) => {
-    const appointmentData = await prisma.appointment.findUniqueOrThrow({
+    const appointmentData = await prisma.appointment.findUnique({
         where: {
             id: appointmentId,
-            // status: AppointmentStatus.SCHEDULED
         },
         include: {
-            doctor: true
-        }
+            doctor: true,
+        },
     });
 
-    // if (!appointmentData) {
-    //     throw new AppError(status.NOT_FOUND, "Appointment not found or already completed/cancelled");
-    // }
-
-    if (user?.role === Role.DOCTOR) {
-        if (!(user?.email === appointmentData.doctor.email))
-            throw new AppError(status.BAD_REQUEST, "This is not your appointment")
+    if (!appointmentData) {
+        throw new AppError(status.NOT_FOUND, "Appointment not found");
     }
 
-    return await prisma.appointment.update({
+    if (user.role === Role.PATIENT) {
+        const patientData = await prisma.patient.findUnique({
+            where: {
+                email: user.email,
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (!patientData || appointmentData.patientId !== patientData.id) {
+            throw new AppError(status.FORBIDDEN, "You can only update your own appointment");
+        }
+
+        if (appointmentStatus !== AppointmentStatus.CANCELED) {
+            throw new AppError(status.BAD_REQUEST, "Patients can only cancel their appointments");
+        }
+    }
+
+    if (user.role === Role.DOCTOR && user.email !== appointmentData.doctor.email) {
+        throw new AppError(status.BAD_REQUEST, "This is not your appointment");
+    }
+
+    return prisma.appointment.update({
         where: {
-            id: appointmentId
+            id: appointmentData.id,
         },
         data: {
-            status: appointmentStatus
-        }
-    })
-
-}
+            status: appointmentStatus,
+        },
+    });
+};
 
 // refactoring on include of doctor and patient data in appointment details, we can use query builder to get the data in single query instead of multiple queries in case of doctor and patient both
 const getMySingleAppointment = async (appointmentId: string, user: IRequestUser) => {
@@ -248,17 +266,53 @@ const getMySingleAppointment = async (appointmentId: string, user: IRequestUser)
     return appointment;
 }
 
-// integrate query builder
-const getAllAppointments = async () => {
-    const appointments = await prisma.appointment.findMany({
+const getAllAppointments = async (query: IQueryParams) => {
+    const queryBuilder = new QueryBuilder<Appointment, Prisma.AppointmentWhereInput, Prisma.AppointmentInclude>(
+        prisma.appointment,
+        query,
+        {
+            searchableFields: appointmentSearchableFields,
+            filterableFields: appointmentFilterableFields,
+        }
+    );
+
+    return queryBuilder
+        .search()
+        .filter()
+        .include({
+            doctor: true,
+            patient: true,
+            schedule: true,
+            payment: true,
+        })
+        .dynamicInclude(appointmentIncludeConfig)
+        .paginate()
+        .sort()
+        .fields()
+        .execute();
+};
+
+const getAppointmentById = async (id: string) => {
+    const appointment = await prisma.appointment.findUnique({
+        where: {
+            id,
+        },
         include: {
             doctor: true,
             patient: true,
-            schedule: true
-        }
+            schedule: true,
+            payment: true,
+            prescription: true,
+            review: true,
+        },
     });
-    return appointments;
-}
+
+    if (!appointment) {
+        throw new AppError(status.NOT_FOUND, "Appointment not found");
+    }
+
+    return appointment;
+};
 
 const bookAppointmentWithPayLater = async (payload: IBookAppointmentPayload, user: IRequestUser) => {
     const patientData = await prisma.patient.findUniqueOrThrow({
@@ -458,6 +512,7 @@ export const AppointmentService = {
     changeAppointmentStatus,
     getMySingleAppointment,
     getAllAppointments,
+    getAppointmentById,
     bookAppointmentWithPayLater,
     initiatePayment,
     cancelUnpaidAppointments,
